@@ -1,0 +1,43 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add Weathercloud Station",
+        "description": "Enter the station ID from the Weathercloud URL.\n\nExample: `app.weathercloud.net/d**5726468552**` → Station ID is `5726468552`",
+        "data": {
+          "device_id": "Station ID"
+        },
+        "data_description": {
+          "device_id": "The numeric ID at the end of the station URL on app.weathercloud.net"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to Weathercloud. Check that the station ID is correct and the station is online.",
+      "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
+    },
+    "abort": {
+      "already_configured": "This station is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": { "name": "Temperature" },
+      "dew_point": { "name": "Dew Point" },
+      "wind_chill": { "name": "Wind Chill" },
+      "heat_index": { "name": "Heat Index" },
+      "humidity": { "name": "Humidity" },
+      "pressure": { "name": "Pressure" },
+      "wind_speed": { "name": "Wind Speed" },
+      "wind_speed_avg": { "name": "Wind Speed Average" },
+      "wind_gust": { "name": "Wind Gust" },
+      "wind_direction": { "name": "Wind Direction" },
+      "wind_direction_avg": { "name": "Wind Direction Average" },
+      "rain": { "name": "Rain" },
+      "rain_rate": { "name": "Rain Rate" },
+      "solar_radiation": { "name": "Solar Radiation" },
+      "uv_index": { "name": "UV Index" },
+      "last_update": { "name": "Last Update" }
+    }
+  }
+}
