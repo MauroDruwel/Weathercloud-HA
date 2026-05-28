@@ -4,17 +4,17 @@ from __future__ import annotations
 import logging
 from datetime import timedelta
 
-from weathercloud import CurrentConditions, StationInfo, WeathercloudClient, WeathercloudError
+from weathercloud import StationInfo, WeathercloudClient, WeathercloudError
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class WeathercloudCoordinator(DataUpdateCoordinator[CurrentConditions]):
+class WeathercloudCoordinator(DataUpdateCoordinator[dict]):
     """Coordinator that polls Weathercloud for current conditions."""
 
     station_info: StationInfo | None = None
@@ -42,11 +42,11 @@ class WeathercloudCoordinator(DataUpdateCoordinator[CurrentConditions]):
             return self.station_info.name
         return self.device_id
 
-    async def _async_update_data(self) -> CurrentConditions:
-        """Fetch current weather conditions from the API."""
+    async def _async_update_data(self) -> dict:
+        """Fetch raw current weather values from the API."""
         try:
             return await self.hass.async_add_executor_job(
-                self.client.get_current_conditions, self.device_id
+                self.client.get_device_values, self.device_id
             )
         except WeathercloudError as err:
             raise UpdateFailed(f"Error communicating with Weathercloud API: {err}") from err

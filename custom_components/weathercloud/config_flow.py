@@ -66,11 +66,13 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_device_id(self, device_id: str) -> None:
-        """Validate the device ID by fetching live conditions."""
+        """Validate the device ID by fetching raw values — works for partial stations too."""
         client = WeathercloudClient()
-        await self.hass.async_add_executor_job(
-            client.get_current_conditions, device_id
+        data = await self.hass.async_add_executor_job(
+            client.get_device_values, device_id
         )
+        if not isinstance(data, dict) or "epoch" not in data:
+            raise WeathercloudError("Unexpected response from station")
 
 
 class WeathercloudOptionsFlow(OptionsFlow):
