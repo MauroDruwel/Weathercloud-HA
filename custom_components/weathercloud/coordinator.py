@@ -9,7 +9,7 @@ from weathercloud import CurrentConditions, StationInfo, WeathercloudClient, Wea
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL_MINUTES
+from .const import DOMAIN, SCAN_INTERVAL_MINUTES, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,12 +24,13 @@ class WeathercloudCoordinator(DataUpdateCoordinator[CurrentConditions]):
         hass: HomeAssistant,
         client: WeathercloudClient,
         device_id: str,
+        scan_interval_minutes: int = DEFAULT_SCAN_INTERVAL,
     ) -> None:
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{device_id}",
-            update_interval=timedelta(minutes=SCAN_INTERVAL_MINUTES),
+            update_interval=timedelta(minutes=scan_interval_minutes),
         )
         self.client = client
         self.device_id = device_id

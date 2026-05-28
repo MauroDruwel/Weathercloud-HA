@@ -10,7 +10,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_DEVICE_ID, DOMAIN
+from .const import CONF_DEVICE_ID, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import WeathercloudCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +23,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_id: str = entry.data[CONF_DEVICE_ID]
     client = WeathercloudClient()
 
-    coordinator = WeathercloudCoordinator(hass, client, device_id)
+    coordinator = WeathercloudCoordinator(
+        hass,
+        client,
+        device_id,
+        scan_interval_minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+    )
 
     # Fetch station info best-effort — a scrape failure must not block setup.
     try:
@@ -50,7 +55,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Reload the entry when the user changes options (e.g. poll interval).
+    entry.async_on_unload(entry.add_update_listener(_async_reload_on_options_change))
     return True
+
+
+async def _async_reload_on_options_change(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

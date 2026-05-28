@@ -20,6 +20,19 @@
       "already_configured": "This station is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weathercloud Options",
+        "data": {
+          "scan_interval": "Poll interval"
+        },
+        "data_description": {
+          "scan_interval": "How often to fetch new data (minutes). Free stations update every 10 min."
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "temperature": { "name": "Temperature" },
