@@ -8,5 +8,6 @@
   "codeowners": ["@MauroDruwel"],
   "requirements": ["weathercloud==0.1.0"],
   "iot_class": "cloud_polling",
-  "integration_type": "device"
+  "integration_type": "device",
+  "import_executor": true
 }
