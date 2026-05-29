@@ -1,72 +1,51 @@
 """The Weathercloud integration."""
 from __future__ import annotations
 
-import logging
+from weathercloud import WeathercloudClient
 
-from weathercloud import WeathercloudClient, WeathercloudError
-
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import CONF_DEVICE_ID, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
-from .coordinator import WeathercloudCoordinator
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_DEVICE_ID
+from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WeathercloudConfigEntry) -> bool:
     """Set up Weathercloud from a config entry."""
     device_id: str = entry.data[CONF_DEVICE_ID]
+
     client = WeathercloudClient()
+    # Register cleanup immediately so the connection pool is released even if
+    # setup fails before the entry is fully loaded.
+    entry.async_on_unload(client.close)
 
-    coordinator = WeathercloudCoordinator(
-        hass,
-        client,
-        device_id,
-        scan_interval_minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-    )
+    coordinator = WeathercloudCoordinator(hass, entry, client, device_id)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
 
-    # Fetch station info best-effort — a scrape failure must not block setup.
-    try:
-        station_info = await hass.async_add_executor_job(
-            lambda: client.get_station_info(device_id, scrape_name=True)
-        )
-        coordinator.station_info = station_info
+    # Promote the scraped station name to the entry title once we have it.
+    info = coordinator.station_info
+    if info and info.name and info.name != device_id and entry.title != info.name:
+        hass.config_entries.async_update_entry(entry, title=info.name)
 
-        # Update the config entry title once we have the real station name.
-        if station_info.name and station_info.name != device_id:
-            hass.config_entries.async_update_entry(entry, title=station_info.name)
-    except WeathercloudError:
-        _LOGGER.warning(
-            "Could not fetch station info for %s — using device ID as name", device_id
-        )
-
-    # This fetches live data; raises ConfigEntryNotReady on failure.
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except Exception as err:
-        raise ConfigEntryNotReady(
-            f"Failed to fetch initial data for {device_id}: {err}"
-        ) from err
-
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Reload the entry when the user changes options (e.g. poll interval).
-    entry.async_on_unload(entry.add_update_listener(_async_reload_on_options_change))
+    entry.async_on_unload(entry.add_update_listener(_async_reload_on_update))
     return True
 
 
-async def _async_reload_on_options_change(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_reload_on_update(
+    hass: HomeAssistant, entry: WeathercloudConfigEntry
+) -> None:
+    """Reload the config entry when its options change."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: WeathercloudConfigEntry
+) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

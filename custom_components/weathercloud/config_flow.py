@@ -1,10 +1,17 @@
 """Config flow for Weathercloud."""
 from __future__ import annotations
 
+import logging
+from typing import Any
+
 import voluptuous as vol
 from weathercloud import WeathercloudClient, WeathercloudError
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -20,6 +27,9 @@ from .const import (
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
 )
+from .coordinator import WeathercloudConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_ID): str,
@@ -33,12 +43,16 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: WeathercloudConfigEntry,
+    ) -> WeathercloudOptionsFlow:
+        """Return the options flow handler."""
         return WeathercloudOptionsFlow()
 
     async def async_step_user(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Handle the initial step where the user enters a station ID."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -48,8 +62,7 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
             except WeathercloudError:
                 errors["base"] = "cannot_connect"
             except Exception:  # noqa: BLE001
-                _LOGGER = __import__("logging").getLogger(__name__)
-                _LOGGER.exception("Unexpected error validating device ID %s", device_id)
+                _LOGGER.exception("Unexpected error validating station ID %s", device_id)
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_id)
@@ -66,25 +79,36 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_device_id(self, device_id: str) -> None:
-        """Validate the device ID by fetching raw values — works for partial stations too."""
+        """Validate the station ID by fetching raw values.
+
+        Works for partial stations too — we only require a parseable response
+        carrying an ``epoch`` timestamp.
+        """
         client = WeathercloudClient()
-        data = await self.hass.async_add_executor_job(
-            client.get_device_values, device_id
-        )
+        try:
+            data = await self.hass.async_add_executor_job(
+                client.get_device_values, device_id
+            )
+        finally:
+            await self.hass.async_add_executor_job(client.close)
+
         if not isinstance(data, dict) or "epoch" not in data:
             raise WeathercloudError("Unexpected response from station")
 
 
 class WeathercloudOptionsFlow(OptionsFlow):
-    """Options flow to configure poll interval."""
+    """Options flow to configure the poll interval."""
 
     async def async_step_init(
-        self, user_input: dict | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        """Manage the poll-interval option."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        current = self.config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+        current = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
         schema = vol.Schema({
             vol.Required(CONF_SCAN_INTERVAL, default=current): NumberSelector(
                 NumberSelectorConfig(

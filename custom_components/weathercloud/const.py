@@ -2,6 +2,8 @@
 
 DOMAIN = "weathercloud"
 
+ATTRIBUTION = "Data provided by Weathercloud"
+
 CONF_DEVICE_ID = "device_id"
 CONF_SCAN_INTERVAL = "scan_interval"
 

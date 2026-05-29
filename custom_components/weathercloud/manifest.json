@@ -1,13 +1,13 @@
 {
   "domain": "weathercloud",
   "name": "Weathercloud",
-  "version": "1.0.0",
+  "codeowners": ["@MauroDruwel"],
   "config_flow": true,
   "documentation": "https://github.com/MauroDruwel/Weathercloud-HA",
-  "issue_tracker": "https://github.com/MauroDruwel/Weathercloud-HA/issues",
-  "codeowners": ["@MauroDruwel"],
-  "requirements": ["weathercloud==0.1.0"],
-  "iot_class": "cloud_polling",
+  "import_executor": true,
   "integration_type": "device",
-  "import_executor": true
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/MauroDruwel/Weathercloud-HA/issues",
+  "requirements": ["weathercloud==0.1.1"],
+  "version": "1.0.0"
 }

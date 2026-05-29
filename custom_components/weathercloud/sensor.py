@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,9 +12,9 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
+    PERCENTAGE,
     UV_INDEX,
     EntityCategory,
     UnitOfIrradiance,
@@ -28,27 +29,53 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SENTINEL_THRESHOLD
-from .coordinator import WeathercloudCoordinator
+from .const import ATTRIBUTION, DOMAIN, SENTINEL_THRESHOLD
+from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator
+
+# Sensors only read shared coordinator data; no per-entity I/O is performed.
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class WeathercloudSensorEntityDescription(SensorEntityDescription):
     """Describes a Weathercloud sensor entity."""
 
-    # Raw API key in the /device/values response dict
+    # Raw API key in the /device/values response dict.
     api_key: str
-    value_fn: Callable[[dict], float | int | datetime | None]
+    value_fn: Callable[[dict[str, Any]], float | int | datetime | None]
 
 
-def _float(data: dict, key: str) -> float | None:
-    v = data.get(key)
-    return float(v) if v is not None else None
+def _float(data: dict[str, Any], key: str) -> float | None:
+    """Coerce a raw (string) API value to float, returning None if invalid."""
+    value = data.get(key)
+    if value is None or value == "":
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
 
 
-def _int(data: dict, key: str) -> int | None:
-    v = data.get(key)
-    return int(v) if v is not None else None
+def _int(data: dict[str, Any], key: str) -> int | None:
+    """Coerce a raw (string) API value to int, returning None if invalid."""
+    value = data.get(key)
+    if value is None or value == "":
+        return None
+    try:
+        return int(float(value))
+    except (TypeError, ValueError):
+        return None
+
+
+def _timestamp(data: dict[str, Any]) -> datetime | None:
+    """Parse the epoch field (a unix timestamp string) into a datetime."""
+    value = data.get("epoch")
+    if value is None or value == "":
+        return None
+    try:
+        return datetime.fromtimestamp(int(float(value)), tz=timezone.utc)
+    except (TypeError, ValueError, OSError, OverflowError):
+        return None
 
 
 def _is_valid(value: float | int | None) -> bool:
@@ -106,7 +133,7 @@ SENSOR_DESCRIPTIONS: tuple[WeathercloudSensorEntityDescription, ...] = (
         translation_key="humidity",
         api_key="hum",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement="%",
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         value_fn=lambda d: _int(d, "hum"),
@@ -215,20 +242,18 @@ SENSOR_DESCRIPTIONS: tuple[WeathercloudSensorEntityDescription, ...] = (
         api_key="epoch",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda d: datetime.fromtimestamp(d["epoch"], tz=timezone.utc)
-        if "epoch" in d
-        else None,
+        value_fn=_timestamp,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WeathercloudConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Weathercloud sensors from a config entry."""
-    coordinator: WeathercloudCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         WeathercloudSensorEntity(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
@@ -239,6 +264,7 @@ class WeathercloudSensorEntity(CoordinatorEntity[WeathercloudCoordinator], Senso
     """A single Weathercloud sensor entity."""
 
     _attr_has_entity_name = True
+    _attr_attribution = ATTRIBUTION
     entity_description: WeathercloudSensorEntityDescription
 
     def __init__(
@@ -257,10 +283,14 @@ class WeathercloudSensorEntity(CoordinatorEntity[WeathercloudCoordinator], Senso
             **_station_extra_info(coordinator),
         )
 
-        # Disable sensors whose API key was absent in the first response.
-        if coordinator.data is not None and description.key != "last_update":
-            if description.api_key not in coordinator.data:
-                self._attr_entity_registry_enabled_default = False
+        # Disable sensors whose API key was absent in the first response, so the
+        # device only surfaces sensors the station actually reports.
+        if (
+            coordinator.data is not None
+            and description.key != "last_update"
+            and description.api_key not in coordinator.data
+        ):
+            self._attr_entity_registry_enabled_default = False
 
     @property
     def native_value(self) -> float | int | datetime | None:
@@ -273,7 +303,7 @@ class WeathercloudSensorEntity(CoordinatorEntity[WeathercloudCoordinator], Senso
         return value if _is_valid(value) else None
 
 
-def _station_extra_info(coordinator: WeathercloudCoordinator) -> dict:
+def _station_extra_info(coordinator: WeathercloudCoordinator) -> dict[str, str]:
     """Build optional DeviceInfo fields from station metadata."""
     info = coordinator.station_info
     if info is None:
@@ -284,4 +314,3 @@ def _station_extra_info(coordinator: WeathercloudCoordinator) -> dict:
     if info.altitude:
         parts.append(f"alt. {info.altitude} m")
     return {"model": ", ".join(parts)} if parts else {}
-
