@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.weathercloud.const import CONF_DEVICE_ID, DOMAIN
 
-from .conftest import AIRPORT_ID, AIRPORT_INFO, AIRPORT_VALUES, DEVICE_ID
+from .conftest import DEVICE_ID
 
 
 async def test_setup_and_unload(
@@ -41,9 +41,8 @@ async def test_setup_and_unload(
 async def test_setup_fails_on_api_error(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry
 ) -> None:
-    """A data-fetch failure from both endpoints results in a retry."""
+    """A data-fetch failure results in a retry (ConfigEntryNotReady)."""
     mock_client.get_device_values.side_effect = WeathercloudError("down")
-    mock_client.get_device_info.return_value = {}  # no "values" key
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -111,37 +110,3 @@ async def test_missing_value_is_handled(
     bar = hass.states.get("sensor.ginometeo_pressure")
     assert bar is not None
     assert bar.state == "1013.2"
-
-
-async def test_airport_station_fallback(
-    hass: HomeAssistant,
-    mock_client: MagicMock,
-    mock_airport_config_entry,
-) -> None:
-    """Airport stations (ICAO codes) load via /device/info fallback."""
-    from weathercloud import WeathercloudError
-
-    mock_client.get_device_values.side_effect = WeathercloudError(
-        "Expected a JSON object from /device/values/LEPA, got: []"
-    )
-    mock_client.get_device_info.return_value = dict(AIRPORT_INFO)
-
-    mock_airport_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_airport_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_airport_config_entry.state is ConfigEntryState.LOADED
-
-    # Sensors available in the airport payload are reported.
-    temp = hass.states.get(f"sensor.{AIRPORT_ID.lower()}_temperature")
-    assert temp is not None
-    assert temp.state == AIRPORT_VALUES["temp"]
-
-    bar = hass.states.get(f"sensor.{AIRPORT_ID.lower()}_pressure")
-    assert bar is not None
-    assert bar.state == AIRPORT_VALUES["bar"]
-
-    # Airports don't send epoch, so last_update is unavailable.
-    last_update = hass.states.get(f"sensor.{AIRPORT_ID.lower()}_last_update")
-    assert last_update is not None
-    assert last_update.state == STATE_UNAVAILABLE

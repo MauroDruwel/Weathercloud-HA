@@ -68,28 +68,11 @@ class WeathercloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch raw current weather values from the API.
-
-        Regular stations expose their current readings at /device/values.
-        Airport stations (ICAO codes such as LEPA) return an empty list from
-        that endpoint, so we fall back to /device/info which embeds the values
-        under a ``"values"`` key.
-        """
+        """Fetch raw current weather values from the API."""
         try:
             return await self.hass.async_add_executor_job(
                 self.client.get_device_values, self.device_id
             )
-        except WeathercloudError:
-            pass
-
-        try:
-            info = await self.hass.async_add_executor_job(
-                self.client.get_device_info, self.device_id
-            )
-            values = info.get("values")
-            if isinstance(values, dict) and values:
-                return values
-            raise UpdateFailed(f"No sensor data returned for station {self.device_id}")
         except WeathercloudError as err:
             raise UpdateFailed(
                 f"Error communicating with Weathercloud API: {err}"
