@@ -79,21 +79,33 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _validate_device_id(self, device_id: str) -> None:
-        """Validate the station ID by fetching raw values.
+        """Validate the station ID by fetching its current values.
 
-        Works for partial stations too — we only require a parseable response
-        carrying an ``epoch`` timestamp.
+        Supports both regular stations (via /device/values, which includes an
+        ``epoch`` field) and airport stations such as ICAO codes (via
+        /device/info), which return an empty list from the values endpoint.
         """
         client = WeathercloudClient()
         try:
-            data = await self.hass.async_add_executor_job(
-                client.get_device_values, device_id
+            try:
+                data = await self.hass.async_add_executor_job(
+                    client.get_device_values, device_id
+                )
+                if isinstance(data, dict) and "epoch" in data:
+                    return  # Regular station validated.
+                # No epoch: not a standard station response — try airport fallback.
+            except WeathercloudError:
+                pass  # Airport stations return [] → WeathercloudError, fall through.
+
+            # Airport fallback: current values live inside /device/info.
+            info = await self.hass.async_add_executor_job(
+                client.get_device_info, device_id
             )
+            values = info.get("values")
+            if not isinstance(values, dict) or not values:
+                raise WeathercloudError("No sensor data in station response")
         finally:
             await self.hass.async_add_executor_job(client.close)
-
-        if not isinstance(data, dict) or "epoch" not in data:
-            raise WeathercloudError("Unexpected response from station")
 
 
 class WeathercloudOptionsFlow(OptionsFlow):

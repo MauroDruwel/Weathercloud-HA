@@ -15,7 +15,7 @@ from custom_components.weathercloud.const import (
     DOMAIN,
 )
 
-from .conftest import DEVICE_ID
+from .conftest import AIRPORT_ID, AIRPORT_INFO, DEVICE_ID
 
 
 async def test_user_flow_success(hass: HomeAssistant, mock_client: MagicMock) -> None:
@@ -99,3 +99,41 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options[CONF_SCAN_INTERVAL] == 15
+
+
+async def test_user_flow_airport_success(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """An ICAO airport code is accepted via the /device/info fallback."""
+    mock_client.get_device_values.side_effect = WeathercloudError(
+        "Expected a JSON object from /device/values/LEPA, got: []"
+    )
+    mock_client.get_device_info.return_value = dict(AIRPORT_INFO)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_ID: AIRPORT_ID}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_DEVICE_ID: AIRPORT_ID}
+    assert mock_client.close.called
+
+
+async def test_user_flow_airport_no_data(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """An ID where both endpoints return no data is rejected."""
+    mock_client.get_device_values.side_effect = WeathercloudError("bad id")
+    mock_client.get_device_info.return_value = {"device": {}, "values": {}}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE_ID: "XXXX"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_client.close.called

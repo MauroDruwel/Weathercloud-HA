@@ -9,6 +9,7 @@ import pytest
 from custom_components.weathercloud.const import CONF_DEVICE_ID, DOMAIN
 
 DEVICE_ID = "5726468552"
+AIRPORT_ID = "LEPA"
 
 # A realistic partial /device/values response: values are strings, and a station
 # only includes the keys for sensors it actually has (no solarrad/uvi here).
@@ -27,6 +28,29 @@ SAMPLE_VALUES = {
     "wdiravg": "176",
     "rain": "0.0",
     "rainrate": "0.0",
+}
+
+# Realistic /device/info["values"] response for an airport station.
+# Airports don't report epoch, wind gust, UV, or solar radiation.
+AIRPORT_VALUES = {
+    "temp": "21.0",
+    "hum": "60",
+    "dew": "13.0",
+    "wspdavg": "4.0",
+    "wdiravg": "70",
+    "bar": "1016.0",
+    "rain": "0.0",
+}
+
+AIRPORT_INFO = {
+    "device": {
+        "account": 0,
+        "status": "2",
+        "city": "Palma de Mallorca",
+        "altitude": "7.3",
+        "update": 2133,
+    },
+    "values": AIRPORT_VALUES,
 }
 
 
@@ -79,4 +103,17 @@ def mock_config_entry():
         title=DEVICE_ID,
         data={CONF_DEVICE_ID: DEVICE_ID},
         unique_id=DEVICE_ID,
+    )
+
+
+@pytest.fixture
+def mock_airport_config_entry():
+    """Return a mock config entry for an airport station."""
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=AIRPORT_ID,
+        data={CONF_DEVICE_ID: AIRPORT_ID},
+        unique_id=AIRPORT_ID,
     )
