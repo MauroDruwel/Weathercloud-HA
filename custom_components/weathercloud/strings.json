@@ -13,6 +13,11 @@
           "device_id": "The numeric ID at the end of the station URL on app.weathercloud.net",
           "username": "Optional - Required only if you want to display private sensors (e.g. inside temperature).",
           "password": "Optional - Required only if you want to display private sensors (e.g. inside temperature)."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "Advanced Options"
+          }
         }
       }
     },

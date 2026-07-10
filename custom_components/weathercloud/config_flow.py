@@ -7,6 +7,7 @@ from typing import Any
 import voluptuous as vol
 from weathercloud import WeathercloudClient, WeathercloudError
 
+from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
@@ -18,6 +19,9 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -53,8 +57,9 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             device_id = user_input[CONF_DEVICE_ID].strip()
-            username = user_input.get(CONF_USERNAME, "").strip() or None
-            password = user_input.get(CONF_PASSWORD, "").strip() or None
+            advanced = user_input.get("advanced_options") or {}
+            username = (advanced.get(CONF_USERNAME) or "").strip() or None
+            password = (advanced.get(CONF_PASSWORD) or "").strip() or None
 
             try:
                 await self._validate_device_id(device_id, username, password)
@@ -78,27 +83,34 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
-        # Build schema dynamically, hiding username/password under Advanced options
+        # Build schema using the collapsible section helper for advanced/credentials fields
         user_input = user_input or {}
-        schema_dict = {
+        advanced_input = user_input.get("advanced_options") or {}
+        data_schema = vol.Schema({
             vol.Required(
                 CONF_DEVICE_ID,
                 default=user_input.get(CONF_DEVICE_ID, ""),
             ): str,
-        }
-        if self.show_advanced_options:
-            schema_dict[vol.Optional(
-                CONF_USERNAME,
-                default=user_input.get(CONF_USERNAME, ""),
-            )] = str
-            schema_dict[vol.Optional(
-                CONF_PASSWORD,
-                default=user_input.get(CONF_PASSWORD, ""),
-            )] = str
+            "advanced_options": data_entry_flow.section(
+                vol.Schema({
+                    vol.Optional(
+                        CONF_USERNAME,
+                        default=advanced_input.get(CONF_USERNAME, ""),
+                    ): str,
+                    vol.Optional(
+                        CONF_PASSWORD,
+                        default=advanced_input.get(CONF_PASSWORD, ""),
+                    ): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }),
+                {"collapsed": True},
+            ),
+        })
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema_dict),
+            data_schema=data_schema,
             errors=errors,
         )
 
