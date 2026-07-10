@@ -27,6 +27,9 @@ SAMPLE_VALUES = {
     "wdiravg": "176",
     "rain": "0.0",
     "rainrate": "0.0",
+    "tempin": "21.5",
+    "humin": "55",
+    "heatin": "22.0",
 }
 
 

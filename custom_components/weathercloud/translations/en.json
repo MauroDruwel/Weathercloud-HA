@@ -5,15 +5,20 @@
         "title": "Add Weathercloud Station",
         "description": "Enter the station ID from the Weathercloud URL.\n\nExample: `app.weathercloud.net/d**5726468552**` → Station ID is `5726468552`",
         "data": {
-          "device_id": "Station ID"
+          "device_id": "Station ID",
+          "username": "Username",
+          "password": "Password"
         },
         "data_description": {
-          "device_id": "The numeric ID at the end of the station URL on app.weathercloud.net"
+          "device_id": "The numeric ID at the end of the station URL on app.weathercloud.net",
+          "username": "Optional - Required only if you want to display private sensors (e.g. inside temperature).",
+          "password": "Optional - Required only if you want to display private sensors (e.g. inside temperature)."
         }
       }
     },
     "error": {
       "cannot_connect": "Cannot connect to Weathercloud. Check that the station ID is correct and the station is online.",
+      "invalid_auth": "Invalid username or password.",
       "unknown": "An unexpected error occurred. Check the Home Assistant logs for details."
     },
     "abort": {
@@ -50,6 +55,9 @@
       "rain_rate": { "name": "Rain Rate" },
       "solar_radiation": { "name": "Solar Radiation" },
       "uv_index": { "name": "UV Index" },
+      "inside_temperature": { "name": "Inside Temperature" },
+      "inside_humidity": { "name": "Inside Humidity" },
+      "inside_heat_index": { "name": "Inside Heat Index" },
       "last_update": { "name": "Last Update" }
     }
   }
