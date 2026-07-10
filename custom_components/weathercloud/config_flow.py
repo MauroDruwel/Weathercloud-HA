@@ -57,7 +57,7 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             device_id = user_input[CONF_DEVICE_ID].strip()
-            advanced = user_input.get("advanced_options") or {}
+            advanced = user_input.get("login_details") or {}
             username = (advanced.get(CONF_USERNAME) or "").strip() or None
             password = (advanced.get(CONF_PASSWORD) or "").strip() or None
 
@@ -85,23 +85,27 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Build schema using the collapsible section helper for advanced/credentials fields
         user_input = user_input or {}
-        advanced_input = user_input.get("advanced_options") or {}
+        advanced_input = user_input.get("login_details") or {}
         data_schema = vol.Schema({
             vol.Required(
                 CONF_DEVICE_ID,
                 default=user_input.get(CONF_DEVICE_ID, ""),
-            ): str,
-            "advanced_options": data_entry_flow.section(
+            ): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="off")
+            ),
+            "login_details": data_entry_flow.section(
                 vol.Schema({
                     vol.Optional(
                         CONF_USERNAME,
                         default=advanced_input.get(CONF_USERNAME, ""),
-                    ): str,
+                    ): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="off")
+                    ),
                     vol.Optional(
                         CONF_PASSWORD,
                         default=advanced_input.get(CONF_PASSWORD, ""),
                     ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
                     ),
                 }),
                 {"collapsed": True},

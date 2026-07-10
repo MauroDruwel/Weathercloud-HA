@@ -52,7 +52,7 @@ async def test_user_flow_with_credentials_success(
         result["flow_id"],
         {
             CONF_DEVICE_ID: DEVICE_ID,
-            "advanced_options": {
+            "login_details": {
                 CONF_USERNAME: "testuser",
                 CONF_PASSWORD: "testpassword",
             },
@@ -97,7 +97,7 @@ async def test_user_flow_invalid_auth(
         result["flow_id"],
         {
             CONF_DEVICE_ID: DEVICE_ID,
-            "advanced_options": {
+            "login_details": {
                 CONF_USERNAME: "baduser",
                 CONF_PASSWORD: "badpassword",
             },

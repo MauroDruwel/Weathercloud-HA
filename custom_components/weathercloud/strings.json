@@ -15,8 +15,9 @@
           "password": "Optional - Required only if you want to display private sensors (e.g. inside temperature)."
         },
         "sections": {
-          "advanced_options": {
-            "name": "Advanced Options"
+          "login_details": {
+            "name": "Login Details",
+            "description": "Only fill this if it's your own station and you want to fetch private sensors (e.g. inside temperature). Otherwise leave blank."
           }
         }
       }
