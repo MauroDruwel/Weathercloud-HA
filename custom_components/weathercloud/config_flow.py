@@ -32,13 +32,6 @@ from .coordinator import WeathercloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICE_ID): str,
-    vol.Optional(CONF_USERNAME): str,
-    vol.Optional(CONF_PASSWORD): str,
-})
-
-
 class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Weathercloud."""
 
@@ -85,9 +78,27 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     },
                 )
 
+        # Build schema dynamically, hiding username/password under Advanced options
+        user_input = user_input or {}
+        schema_dict = {
+            vol.Required(
+                CONF_DEVICE_ID,
+                default=user_input.get(CONF_DEVICE_ID, ""),
+            ): str,
+        }
+        if self.show_advanced_options:
+            schema_dict[vol.Optional(
+                CONF_USERNAME,
+                default=user_input.get(CONF_USERNAME, ""),
+            )] = str
+            schema_dict[vol.Optional(
+                CONF_PASSWORD,
+                default=user_input.get(CONF_PASSWORD, ""),
+            )] = str
+
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=vol.Schema(schema_dict),
             errors=errors,
         )
 

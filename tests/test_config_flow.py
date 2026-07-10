@@ -44,7 +44,7 @@ async def test_user_flow_with_credentials_success(
 ) -> None:
     """A valid station ID and valid credentials creates an entry."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -89,7 +89,7 @@ async def test_user_flow_invalid_auth(
     mock_client.get_device_values.side_effect = WeathercloudError("Login failed: invalid password")
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
