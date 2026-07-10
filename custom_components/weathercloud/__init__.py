@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from weathercloud import WeathercloudClient
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_DEVICE_ID
@@ -15,8 +15,10 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: WeathercloudConfigEntry) -> bool:
     """Set up Weathercloud from a config entry."""
     device_id: str = entry.data[CONF_DEVICE_ID]
+    username: str | None = entry.data.get(CONF_USERNAME)
+    password: str | None = entry.data.get(CONF_PASSWORD)
 
-    client = WeathercloudClient()
+    client = WeathercloudClient(username=username, password=password)
     # Register cleanup immediately so the connection pool is released even if
     # setup fails before the entry is fully loaded.
     entry.async_on_unload(client.close)

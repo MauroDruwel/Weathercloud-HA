@@ -31,6 +31,18 @@ async def test_setup_and_unload(
     assert state is not None
     assert state.state == "22.8"
 
+    state_in_temp = hass.states.get("sensor.ginometeo_inside_temperature")
+    assert state_in_temp is not None
+    assert state_in_temp.state == "21.5"
+
+    state_in_hum = hass.states.get("sensor.ginometeo_inside_humidity")
+    assert state_in_hum is not None
+    assert state_in_hum.state == "55"
+
+    state_in_heat = hass.states.get("sensor.ginometeo_inside_heat_index")
+    assert state_in_heat is not None
+    assert state_in_heat.state == "22.0"
+
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED

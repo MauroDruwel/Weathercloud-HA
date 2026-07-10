@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 from weathercloud import WeathercloudError
 
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,8 +30,38 @@ async def test_user_flow_success(hass: HomeAssistant, mock_client: MagicMock) ->
         result["flow_id"], {CONF_DEVICE_ID: f"  {DEVICE_ID}  "}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_DEVICE_ID: DEVICE_ID}
+    assert result["data"] == {
+        CONF_DEVICE_ID: DEVICE_ID,
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
     # The validation client must be closed regardless of outcome.
+    assert mock_client.close.called
+
+
+async def test_user_flow_with_credentials_success(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """A valid station ID and valid credentials creates an entry."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DEVICE_ID: DEVICE_ID,
+            CONF_USERNAME: "testuser",
+            CONF_PASSWORD: "testpassword",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_DEVICE_ID: DEVICE_ID,
+        CONF_USERNAME: "testuser",
+        CONF_PASSWORD: "testpassword",
+    }
     assert mock_client.close.called
 
 
@@ -48,6 +79,28 @@ async def test_user_flow_cannot_connect(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_client.close.called
+
+
+async def test_user_flow_invalid_auth(
+    hass: HomeAssistant, mock_client: MagicMock
+) -> None:
+    """A login-related WeathercloudError surfaces as an invalid_auth error."""
+    mock_client.get_device_values.side_effect = WeathercloudError("Login failed: invalid password")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_DEVICE_ID: DEVICE_ID,
+            CONF_USERNAME: "baduser",
+            CONF_PASSWORD: "badpassword",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
     assert mock_client.close.called
 
 
