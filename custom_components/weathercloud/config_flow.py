@@ -91,7 +91,7 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_ID,
                 default=user_input.get(CONF_DEVICE_ID, ""),
             ): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="off")
+                TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="one-time-code")
             ),
             "login_details": data_entry_flow.section(
                 vol.Schema({
@@ -99,13 +99,13 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME,
                         default=advanced_input.get(CONF_USERNAME, ""),
                     ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="off")
+                        TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="one-time-code")
                     ),
                     vol.Optional(
                         CONF_PASSWORD,
                         default=advanced_input.get(CONF_PASSWORD, ""),
                     ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="off")
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="new-password")
                     ),
                 }),
                 {"collapsed": True},

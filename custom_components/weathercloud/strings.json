@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Add Weathercloud Station",
-        "description": "Enter the station ID from the Weathercloud URL.\n\nExample: `app.weathercloud.net/d**5726468552**` → Station ID is `5726468552`",
+        "description": "Enter the station ID from the Weathercloud URL.\n\nExample: `app.weathercloud.net/d**5726468552**` → Station ID is `5726468552`\n\n**Login Details:** Only fill the Login Details section if this is your own station and you want to fetch private sensors (e.g., inside temperature). Otherwise, leave it blank.",
         "data": {
           "device_id": "Station ID",
           "username": "Username",
@@ -16,8 +16,7 @@
         },
         "sections": {
           "login_details": {
-            "name": "Login Details",
-            "description": "Only fill this if it's your own station and you want to fetch private sensors (e.g. inside temperature). Otherwise leave blank."
+            "name": "Login Details"
           }
         }
       }
