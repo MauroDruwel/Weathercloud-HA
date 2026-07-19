@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_DEVICE_ID
 from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeathercloudConfigEntry) -> bool:

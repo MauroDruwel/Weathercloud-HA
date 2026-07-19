@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
 from weathercloud import StationInfo, WeathercloudClient, WeathercloudError
@@ -10,10 +10,15 @@ from weathercloud import StationInfo, WeathercloudClient, WeathercloudError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+# The WMO daily forecast changes rarely, so refresh it at most once per hour
+# regardless of how often the live sensor values are polled.
+FORECAST_REFRESH_INTERVAL = timedelta(hours=1)
 
 type WeathercloudConfigEntry = ConfigEntry[WeathercloudCoordinator]
 
@@ -42,6 +47,9 @@ class WeathercloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client = client
         self.device_id = device_id
+        # Raw response from WeathercloudClient.get_forecast(device_id).
+        self.forecast_data: dict[str, Any] | None = None
+        self._forecast_fetched_at: datetime | None = None
 
     @property
     def device_name(self) -> str:
@@ -70,10 +78,35 @@ class WeathercloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch raw current weather values from the API."""
         try:
-            return await self.hass.async_add_executor_job(
+            data = await self.hass.async_add_executor_job(
                 self.client.get_device_values, self.device_id
             )
         except WeathercloudError as err:
             raise UpdateFailed(
                 f"Error communicating with Weathercloud API: {err}"
             ) from err
+
+        # Refresh the daily forecast alongside the live values, but at most once
+        # per FORECAST_REFRESH_INTERVAL. A forecast failure is non-fatal: the
+        # weather entity simply keeps (or lacks) its previous forecast.
+        await self._async_maybe_update_forecast()
+        return data
+
+    async def _async_maybe_update_forecast(self) -> None:
+        """Fetch the daily forecast if the cached one is stale or missing."""
+        now = dt_util.utcnow()
+        if (
+            self.forecast_data is not None
+            and self._forecast_fetched_at is not None
+            and now - self._forecast_fetched_at < FORECAST_REFRESH_INTERVAL
+        ):
+            return
+        try:
+            self.forecast_data = await self.hass.async_add_executor_job(
+                self.client.get_forecast, self.device_id
+            )
+            self._forecast_fetched_at = now
+        except WeathercloudError as err:
+            _LOGGER.warning(
+                "Could not fetch forecast for %s: %s", self.device_id, err
+            )
