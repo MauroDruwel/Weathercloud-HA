@@ -233,8 +233,8 @@ SENSOR_DESCRIPTIONS: tuple[WeathercloudSensorEntityDescription, ...] = (
         native_unit_of_measurement=UV_INDEX,
         state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:sun-wireless",
-        suggested_display_precision=0,
-        value_fn=lambda d: _int(d, "uvi"),
+        suggested_display_precision=1,
+        value_fn=lambda d: _float(d, "uvi"),
     ),
     WeathercloudSensorEntityDescription(
         key="inside_temperature",

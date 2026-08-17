@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 
 from custom_components.weathercloud.const import CONF_DEVICE_ID, DOMAIN
 
-from .conftest import DEVICE_ID
+from .conftest import DEVICE_ID, SAMPLE_VALUES
 
 
 async def test_setup_and_unload(
@@ -122,3 +122,18 @@ async def test_missing_value_is_handled(
     bar = hass.states.get("sensor.ginometeo_pressure")
     assert bar is not None
     assert bar.state == "1013.2"
+
+
+async def test_fractional_uv_index_is_not_truncated(
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry
+) -> None:
+    """A UV index below 1 keeps its decimal instead of being truncated to 0."""
+    payload = dict(SAMPLE_VALUES, uvi="0.9")
+    mock_client.get_device_values.return_value = payload
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ginometeo_uv_index")
+    assert state is not None
+    assert state.state == "0.9"
