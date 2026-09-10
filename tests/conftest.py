@@ -7,7 +7,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.weathercloud.const import CONF_DEVICE_ID, CONF_SHOW_ON_MAP, DOMAIN
+from custom_components.weathercloud.const import (
+    CONF_DEVICE_ID,
+    CONF_SHOW_ON_MAP,
+    DOMAIN,
+)
 
 DEVICE_ID = "5726468552"
 

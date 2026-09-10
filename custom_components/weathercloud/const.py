@@ -4,7 +4,6 @@ DOMAIN = "weathercloud"
 
 ATTRIBUTION = "Data provided by Weathercloud"
 
-from homeassistant.const import CONF_SHOW_ON_MAP
 
 CONF_DEVICE_ID = "device_id"
 CONF_SCAN_INTERVAL = "scan_interval"

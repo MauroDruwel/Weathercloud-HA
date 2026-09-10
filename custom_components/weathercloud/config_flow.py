@@ -107,9 +107,7 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 vol.Optional(
                     CONF_SHOW_ON_MAP,
-                    default=user_input.get(
-                        CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP
-                    ),
+                    default=user_input.get(CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP),
                 ): bool,
                 "login_details": data_entry_flow.section(
                     vol.Schema(
@@ -187,9 +185,7 @@ class WeathercloudOptionsFlow(OptionsFlow):
         )
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL, default=current_scan
-                ): NumberSelector(
+                vol.Required(CONF_SCAN_INTERVAL, default=current_scan): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_SCAN_INTERVAL,
                         max=MAX_SCAN_INTERVAL,
@@ -198,9 +194,7 @@ class WeathercloudOptionsFlow(OptionsFlow):
                         mode=NumberSelectorMode.BOX,
                     )
                 ),
-                vol.Optional(
-                    CONF_SHOW_ON_MAP, default=current_show_on_map
-                ): bool,
+                vol.Optional(CONF_SHOW_ON_MAP, default=current_show_on_map): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)
