@@ -30,6 +30,8 @@ async def test_setup_and_unload(
     state = hass.states.get("sensor.ginometeo_temperature")
     assert state is not None
     assert state.state == "22.8"
+    assert state.attributes.get("latitude") == 50.8303
+    assert state.attributes.get("longitude") == 3.2697
 
     state_in_temp = hass.states.get("sensor.ginometeo_inside_temperature")
     assert state_in_temp is not None
@@ -137,3 +139,19 @@ async def test_fractional_uv_index_is_not_truncated(
     state = hass.states.get("sensor.ginometeo_uv_index")
     assert state is not None
     assert state.state == "0.9"
+
+
+async def test_station_coordinates_missing_omits_map_attributes(
+    hass: HomeAssistant, mock_client: MagicMock, mock_station_info: MagicMock, mock_config_entry
+) -> None:
+    """When coordinates are absent, ATTR_LATITUDE / ATTR_LONGITUDE are not set."""
+    mock_station_info.latitude = None
+    mock_station_info.longitude = None
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ginometeo_temperature")
+    assert state is not None
+    assert "latitude" not in state.attributes
+    assert "longitude" not in state.attributes

@@ -13,6 +13,8 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     DEGREE,
     PERCENTAGE,
     UV_INDEX,
@@ -331,6 +333,25 @@ class WeathercloudSensorEntity(CoordinatorEntity[WeathercloudCoordinator], Senso
         if isinstance(value, datetime):
             return value
         return value if _is_valid(value) else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, float] | None:
+        """Return station coordinates so HA map card can show this sensor.
+
+        When ``latitude`` and ``longitude`` are set on a sensor entity's extra
+        state attributes, the entity appears on the Home Assistant map card —
+        the same mechanism used by sensor.community and ha-narodmon.
+
+        Coordinates are scraped from the station HTML page once at startup and
+        cached in ``coordinator.station_info``; polling has no extra cost.
+        """
+        info = self.coordinator.station_info
+        if info is None or info.latitude is None or info.longitude is None:
+            return None
+        return {
+            ATTR_LATITUDE: info.latitude,
+            ATTR_LONGITUDE: info.longitude,
+        }
 
 
 def _station_extra_info(coordinator: WeathercloudCoordinator) -> dict[str, str]:

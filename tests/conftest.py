@@ -48,6 +48,8 @@ def mock_station_info() -> MagicMock:
     info.name = "Ginometeo"
     info.city = "Ingelmunster"
     info.altitude = "18.0"
+    info.latitude = 50.8303
+    info.longitude = 3.2697
     return info
 
 
