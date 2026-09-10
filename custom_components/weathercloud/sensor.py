@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -76,7 +76,7 @@ def _timestamp(data: dict[str, Any]) -> datetime | None:
     if value is None or value == "":
         return None
     try:
-        return datetime.fromtimestamp(int(float(value)), tz=timezone.utc)
+        return datetime.fromtimestamp(int(float(value)), tz=UTC)
     except (TypeError, ValueError, OSError, OverflowError):
         return None
 

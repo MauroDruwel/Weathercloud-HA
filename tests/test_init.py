@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock
 
 from homeassistant.config_entries import ConfigEntryState
@@ -99,7 +99,7 @@ async def test_last_update_parses_epoch(
 
     state = hass.states.get("sensor.ginometeo_last_update")
     assert state is not None
-    expected = datetime.fromtimestamp(1748358122, tz=timezone.utc).isoformat()
+    expected = datetime.fromtimestamp(1748358122, tz=UTC).isoformat()
     assert state.state == expected
 
 
