@@ -1,4 +1,5 @@
 """Tests for the Weathercloud config and options flow."""
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock
@@ -87,7 +88,9 @@ async def test_user_flow_invalid_auth(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """A login-related WeathercloudError surfaces as an invalid_auth error."""
-    mock_client.get_device_values.side_effect = WeathercloudError("Login failed: invalid password")
+    mock_client.get_device_values.side_effect = WeathercloudError(
+        "Login failed: invalid password"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

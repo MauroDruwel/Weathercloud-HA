@@ -1,4 +1,5 @@
 """Sensor platform for the Weathercloud integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -290,7 +291,9 @@ async def async_setup_entry(
     )
 
 
-class WeathercloudSensorEntity(CoordinatorEntity[WeathercloudCoordinator], SensorEntity):
+class WeathercloudSensorEntity(
+    CoordinatorEntity[WeathercloudCoordinator], SensorEntity
+):
     """A single Weathercloud sensor entity."""
 
     _attr_has_entity_name = True

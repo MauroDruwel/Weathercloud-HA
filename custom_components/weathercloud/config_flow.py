@@ -1,4 +1,5 @@
 """Config flow for Weathercloud."""
+
 from __future__ import annotations
 
 import logging
@@ -36,6 +37,7 @@ from .coordinator import WeathercloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for Weathercloud."""
 
@@ -69,7 +71,9 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected error validating station ID %s", device_id)
+                _LOGGER.exception(
+                    "Unexpected error validating station ID %s", device_id
+                )
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(device_id)
@@ -86,31 +90,43 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
         # Build schema using the collapsible section helper for advanced/credentials fields
         user_input = user_input or {}
         advanced_input = user_input.get("login_details") or {}
-        data_schema = vol.Schema({
-            vol.Required(
-                CONF_DEVICE_ID,
-                default=user_input.get(CONF_DEVICE_ID, ""),
-            ): TextSelector(
-                TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="one-time-code")
-            ),
-            "login_details": data_entry_flow.section(
-                vol.Schema({
-                    vol.Optional(
-                        CONF_USERNAME,
-                        default=advanced_input.get(CONF_USERNAME, ""),
-                    ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.TEXT, autocomplete="one-time-code")
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_DEVICE_ID,
+                    default=user_input.get(CONF_DEVICE_ID, ""),
+                ): TextSelector(
+                    TextSelectorConfig(
+                        type=TextSelectorType.TEXT, autocomplete="one-time-code"
+                    )
+                ),
+                "login_details": data_entry_flow.section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_USERNAME,
+                                default=advanced_input.get(CONF_USERNAME, ""),
+                            ): TextSelector(
+                                TextSelectorConfig(
+                                    type=TextSelectorType.TEXT,
+                                    autocomplete="one-time-code",
+                                )
+                            ),
+                            vol.Optional(
+                                CONF_PASSWORD,
+                                default=advanced_input.get(CONF_PASSWORD, ""),
+                            ): TextSelector(
+                                TextSelectorConfig(
+                                    type=TextSelectorType.PASSWORD,
+                                    autocomplete="new-password",
+                                )
+                            ),
+                        }
                     ),
-                    vol.Optional(
-                        CONF_PASSWORD,
-                        default=advanced_input.get(CONF_PASSWORD, ""),
-                    ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.PASSWORD, autocomplete="new-password")
-                    ),
-                }),
-                {"collapsed": True},
-            ),
-        })
+                    {"collapsed": True},
+                ),
+            }
+        )
 
         return self.async_show_form(
             step_id="user",
@@ -154,15 +170,17 @@ class WeathercloudOptionsFlow(OptionsFlow):
         current = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
-        schema = vol.Schema({
-            vol.Required(CONF_SCAN_INTERVAL, default=current): NumberSelector(
-                NumberSelectorConfig(
-                    min=MIN_SCAN_INTERVAL,
-                    max=MAX_SCAN_INTERVAL,
-                    step=1,
-                    unit_of_measurement="min",
-                    mode=NumberSelectorMode.BOX,
-                )
-            ),
-        })
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_SCAN_INTERVAL, default=current): NumberSelector(
+                    NumberSelectorConfig(
+                        min=MIN_SCAN_INTERVAL,
+                        max=MAX_SCAN_INTERVAL,
+                        step=1,
+                        unit_of_measurement="min",
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
         return self.async_show_form(step_id="init", data_schema=schema)

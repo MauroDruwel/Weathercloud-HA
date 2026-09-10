@@ -1,4 +1,5 @@
 """The Weathercloud integration."""
+
 from __future__ import annotations
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -12,7 +13,9 @@ from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: WeathercloudConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: WeathercloudConfigEntry
+) -> bool:
     """Set up Weathercloud from a config entry."""
     device_id: str = entry.data[CONF_DEVICE_ID]
     username: str | None = entry.data.get(CONF_USERNAME)

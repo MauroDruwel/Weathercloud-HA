@@ -9,18 +9,5 @@ on:
   workflow_dispatch:
 
 jobs:
-  hassfest:
-    name: Hassfest
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: home-assistant/actions/hassfest@master
-
-  hacs:
-    name: HACS
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: hacs/action@main
-        with:
-          category: integration
+  validate:
+    uses: MauroDruwel/ha-quality-gate/.github/workflows/validate.yml@main

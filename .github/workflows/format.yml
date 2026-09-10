@@ -1,0 +1,13 @@
+name: Format
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  format:
+    permissions:
+      contents: write
+    uses: MauroDruwel/ha-quality-gate/.github/workflows/format.yml@main

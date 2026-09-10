@@ -1,4 +1,5 @@
 """Tests for the Weathercloud setup, coordinator, and sensors."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -139,7 +140,10 @@ async def test_fractional_uv_index_is_not_truncated(
 
 
 async def test_station_coordinates_missing_omits_map_attributes(
-    hass: HomeAssistant, mock_client: MagicMock, mock_station_info: MagicMock, mock_config_entry
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_station_info: MagicMock,
+    mock_config_entry,
 ) -> None:
     """When coordinates are absent, ATTR_LATITUDE / ATTR_LONGITUDE are not set."""
     mock_station_info.latitude = None
