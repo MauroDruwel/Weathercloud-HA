@@ -5,8 +5,6 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from weathercloud import WeathercloudClient, WeathercloudError
-
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
     ConfigFlow,
@@ -23,6 +21,8 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+
+from weathercloud import WeathercloudClient, WeathercloudError
 
 from .const import (
     CONF_DEVICE_ID,
@@ -68,7 +68,7 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
-            except Exception:  # noqa: BLE001
+            except Exception:
                 _LOGGER.exception("Unexpected error validating station ID %s", device_id)
                 errors["base"] = "unknown"
             else:

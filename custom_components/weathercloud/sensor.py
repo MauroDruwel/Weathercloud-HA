@@ -80,13 +80,11 @@ def _timestamp(data: dict[str, Any]) -> datetime | None:
         return None
 
 
-def _is_valid(value: float | int | None) -> bool:
+def _is_valid(value: float | None) -> bool:
     """Return True if the value is real sensor data, not a no-data sentinel."""
     if value is None:
         return False
-    if isinstance(value, (int, float)) and value <= SENTINEL_THRESHOLD:
-        return False
-    return True
+    return not (isinstance(value, (int, float)) and value <= SENTINEL_THRESHOLD)
 
 
 SENSOR_DESCRIPTIONS: tuple[WeathercloudSensorEntityDescription, ...] = (

@@ -1,10 +1,10 @@
 """The Weathercloud integration."""
 from __future__ import annotations
 
-from weathercloud import WeathercloudClient
-
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
+
+from weathercloud import WeathercloudClient
 
 from .const import CONF_DEVICE_ID
 from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator

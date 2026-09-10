@@ -4,13 +4,10 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
 
-from weathercloud import WeathercloudError
-
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-
-from custom_components.weathercloud.const import CONF_DEVICE_ID, DOMAIN
+from weathercloud import WeathercloudError
 
 from .conftest import DEVICE_ID, SAMPLE_VALUES
 

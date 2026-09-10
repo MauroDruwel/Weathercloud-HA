@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock
 
-from weathercloud import WeathercloudError
-
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from weathercloud import WeathercloudError
 
 from custom_components.weathercloud.const import (
     CONF_DEVICE_ID,
