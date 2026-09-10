@@ -7,6 +7,7 @@ ATTRIBUTION = "Data provided by Weathercloud"
 
 CONF_DEVICE_ID = "device_id"
 CONF_SCAN_INTERVAL = "scan_interval"
+CONF_SHOW_ON_MAP = "show_on_map"
 
 DEFAULT_SCAN_INTERVAL = 10
 DEFAULT_SHOW_ON_MAP: bool = False
