@@ -28,7 +28,9 @@ from weathercloud import WeathercloudClient, WeathercloudError
 from .const import (
     CONF_DEVICE_ID,
     CONF_SCAN_INTERVAL,
+    CONF_SHOW_ON_MAP,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_SHOW_ON_MAP,
     DOMAIN,
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -84,6 +86,9 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_DEVICE_ID: device_id,
                         CONF_USERNAME: username,
                         CONF_PASSWORD: password,
+                        CONF_SHOW_ON_MAP: user_input.get(
+                            CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP
+                        ),
                     },
                 )
 
@@ -100,6 +105,12 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
                         type=TextSelectorType.TEXT, autocomplete="one-time-code"
                     )
                 ),
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    default=user_input.get(
+                        CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP
+                    ),
+                ): bool,
                 "login_details": data_entry_flow.section(
                     vol.Schema(
                         {
@@ -158,21 +169,27 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class WeathercloudOptionsFlow(OptionsFlow):
-    """Options flow to configure the poll interval."""
+    """Options flow to configure the poll interval and map display."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Manage the poll-interval option."""
+        """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)
 
-        current = self.config_entry.options.get(
+        current_scan = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        current_show_on_map = self.config_entry.options.get(
+            CONF_SHOW_ON_MAP,
+            self.config_entry.data.get(CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP),
         )
         schema = vol.Schema(
             {
-                vol.Required(CONF_SCAN_INTERVAL, default=current): NumberSelector(
+                vol.Required(
+                    CONF_SCAN_INTERVAL, default=current_scan
+                ): NumberSelector(
                     NumberSelectorConfig(
                         min=MIN_SCAN_INTERVAL,
                         max=MAX_SCAN_INTERVAL,
@@ -181,6 +198,9 @@ class WeathercloudOptionsFlow(OptionsFlow):
                         mode=NumberSelectorMode.BOX,
                     )
                 ),
+                vol.Optional(
+                    CONF_SHOW_ON_MAP, default=current_show_on_map
+                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

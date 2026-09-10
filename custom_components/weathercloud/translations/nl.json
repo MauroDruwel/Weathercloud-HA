@@ -6,11 +6,13 @@
         "description": "Voer het station-ID in vanaf de Weathercloud-URL.\n\nVoorbeeld: `app.weathercloud.net/d**5726468552**` → Station-ID is `5726468552`\n\n**Inloggegevens:** Vul dit gedeelte alleen in als dit uw eigen station is en u privésensoren (zoals binnentemperatuur) wilt ophalen. Laat anders leeg.",
         "data": {
           "device_id": "Station-ID",
+          "show_on_map": "Temperatuur weergeven op de kaart",
           "username": "Gebruikersnaam",
           "password": "Wachtwoord"
         },
         "data_description": {
           "device_id": "Het numerieke ID aan het einde van de URL van het station op app.weathercloud.net",
+          "show_on_map": "Geeft de temperatuur van het station weer op de Home Assistant-kaart.",
           "username": "Optioneel - Alleen vereist als u privésensoren (zoals binnentemperatuur) wilt weergeven.",
           "password": "Optioneel - Alleen vereist als u privésensoren (zoals binnentemperatuur) wilt weergeven."
         },
@@ -35,10 +37,12 @@
       "init": {
         "title": "Weathercloud-opties",
         "data": {
-          "scan_interval": "Polling-interval"
+          "scan_interval": "Polling-interval",
+          "show_on_map": "Temperatuur weergeven op de kaart"
         },
         "data_description": {
-          "scan_interval": "Hoe vaak nieuwe gegevens moeten worden opgehaald (minuten). Gratis stations updaten elke 10 minuten."
+          "scan_interval": "Hoe vaak nieuwe gegevens moeten worden opgehaald (minuten). Gratis stations updaten elke 10 minuten.",
+          "show_on_map": "Geeft de temperatuur van het station weer op de Home Assistant-kaart."
         }
       }
     }

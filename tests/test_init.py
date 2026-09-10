@@ -10,6 +10,8 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from weathercloud import WeathercloudError
 
+from custom_components.weathercloud.const import CONF_SHOW_ON_MAP
+
 from .conftest import DEVICE_ID, SAMPLE_VALUES
 
 
@@ -34,6 +36,8 @@ async def test_setup_and_unload(
     state_in_temp = hass.states.get("sensor.ginometeo_inside_temperature")
     assert state_in_temp is not None
     assert state_in_temp.state == "21.5"
+    assert "latitude" not in state_in_temp.attributes
+    assert "longitude" not in state_in_temp.attributes
 
     state_in_hum = hass.states.get("sensor.ginometeo_inside_humidity")
     assert state_in_hum is not None
@@ -156,3 +160,20 @@ async def test_station_coordinates_missing_omits_map_attributes(
     assert state is not None
     assert "latitude" not in state.attributes
     assert "longitude" not in state.attributes
+
+
+async def test_show_on_map_disabled_omits_coordinates(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    mock_config_entry,
+) -> None:
+    """When show_on_map option is False, coordinates are not exposed."""
+    mock_config_entry.options = {CONF_SHOW_ON_MAP: False}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    temp_state = hass.states.get("sensor.ginometeo_temperature")
+    assert temp_state is not None
+    assert "latitude" not in temp_state.attributes
+    assert "longitude" not in temp_state.attributes

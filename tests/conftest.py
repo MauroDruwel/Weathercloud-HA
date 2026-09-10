@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.weathercloud.const import CONF_DEVICE_ID, DOMAIN
+from custom_components.weathercloud.const import CONF_DEVICE_ID, CONF_SHOW_ON_MAP, DOMAIN
 
 DEVICE_ID = "5726468552"
 
@@ -84,5 +84,6 @@ def mock_config_entry():
         domain=DOMAIN,
         title=DEVICE_ID,
         data={CONF_DEVICE_ID: DEVICE_ID},
+        options={CONF_SHOW_ON_MAP: True},
         unique_id=DEVICE_ID,
     )

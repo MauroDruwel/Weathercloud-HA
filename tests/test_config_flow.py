@@ -13,6 +13,7 @@ from weathercloud import WeathercloudError
 from custom_components.weathercloud.const import (
     CONF_DEVICE_ID,
     CONF_SCAN_INTERVAL,
+    CONF_SHOW_ON_MAP,
     DOMAIN,
 )
 
@@ -34,6 +35,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_client: MagicMock) ->
         CONF_DEVICE_ID: DEVICE_ID,
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
+        CONF_SHOW_ON_MAP: False,
     }
     # The validation client must be closed regardless of outcome.
     assert mock_client.close.called
@@ -52,6 +54,7 @@ async def test_user_flow_with_credentials_success(
         result["flow_id"],
         {
             CONF_DEVICE_ID: DEVICE_ID,
+            CONF_SHOW_ON_MAP: True,
             "login_details": {
                 CONF_USERNAME: "testuser",
                 CONF_PASSWORD: "testpassword",
@@ -63,6 +66,7 @@ async def test_user_flow_with_credentials_success(
         CONF_DEVICE_ID: DEVICE_ID,
         CONF_USERNAME: "testuser",
         CONF_PASSWORD: "testpassword",
+        CONF_SHOW_ON_MAP: True,
     }
     assert mock_client.close.called
 
@@ -145,7 +149,7 @@ async def test_user_flow_duplicate(
 async def test_options_flow(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry
 ) -> None:
-    """The options flow stores a new poll interval."""
+    """The options flow stores a new poll interval and map setting."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -154,7 +158,8 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_SCAN_INTERVAL: 15}
+        result["flow_id"], {CONF_SCAN_INTERVAL: 15, CONF_SHOW_ON_MAP: False}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options[CONF_SCAN_INTERVAL] == 15
+    assert mock_config_entry.options[CONF_SHOW_ON_MAP] is False

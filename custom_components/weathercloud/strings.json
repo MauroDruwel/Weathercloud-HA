@@ -6,11 +6,13 @@
         "description": "Enter the station ID from the Weathercloud URL.\n\nExample: `app.weathercloud.net/d**5726468552**` → Station ID is `5726468552`\n\n**Login Details:** Only fill the Login Details section if this is your own station and you want to fetch private sensors (e.g., inside temperature). Otherwise, leave it blank.",
         "data": {
           "device_id": "Station ID",
+          "show_on_map": "Show temperature on map",
           "username": "Username",
           "password": "Password"
         },
         "data_description": {
           "device_id": "The numeric ID at the end of the station URL on app.weathercloud.net",
+          "show_on_map": "Display the station's temperature on the Home Assistant map card.",
           "username": "Optional - Required only if you want to display private sensors (e.g. inside temperature).",
           "password": "Optional - Required only if you want to display private sensors (e.g. inside temperature)."
         },
@@ -35,10 +37,12 @@
       "init": {
         "title": "Weathercloud Options",
         "data": {
-          "scan_interval": "Poll interval"
+          "scan_interval": "Poll interval",
+          "show_on_map": "Show temperature on map"
         },
         "data_description": {
-          "scan_interval": "How often to fetch new data (minutes). Free stations update every 10 min."
+          "scan_interval": "How often to fetch new data (minutes). Free stations update every 10 min.",
+          "show_on_map": "Display the station's temperature on the Home Assistant map card."
         }
       }
     }

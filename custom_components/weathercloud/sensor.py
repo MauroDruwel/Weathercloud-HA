@@ -32,7 +32,13 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTRIBUTION, DOMAIN, SENTINEL_THRESHOLD
+from .const import (
+    ATTRIBUTION,
+    CONF_SHOW_ON_MAP,
+    DEFAULT_SHOW_ON_MAP,
+    DOMAIN,
+    SENTINEL_THRESHOLD,
+)
 from .coordinator import WeathercloudConfigEntry, WeathercloudCoordinator
 
 # Sensors only read shared coordinator data; no per-entity I/O is performed.
@@ -339,13 +345,20 @@ class WeathercloudSensorEntity(
     def extra_state_attributes(self) -> dict[str, float] | None:
         """Return station coordinates so HA map card can show this sensor.
 
-        When ``latitude`` and ``longitude`` are set on a sensor entity's extra
-        state attributes, the entity appears on the Home Assistant map card —
-        the same mechanism used by sensor.community and ha-narodmon.
-
-        Coordinates are scraped from the station HTML page once at startup and
-        cached in ``coordinator.station_info``; polling has no extra cost.
+        When show_on_map is enabled, only the primary temperature sensor exposes
+        ATTR_LATITUDE and ATTR_LONGITUDE so that Home Assistant displays a single
+        clean temperature reading on the map, rather than cluttering it with
+        13+ overlapping markers for every entity.
         """
+        show_on_map = self.coordinator.config_entry.options.get(
+            CONF_SHOW_ON_MAP,
+            self.coordinator.config_entry.data.get(
+                CONF_SHOW_ON_MAP, DEFAULT_SHOW_ON_MAP
+            ),
+        )
+        if not show_on_map or self.entity_description.key != "temperature":
+            return None
+
         info = self.coordinator.station_info
         if info is None or info.latitude is None or info.longitude is None:
             return None
