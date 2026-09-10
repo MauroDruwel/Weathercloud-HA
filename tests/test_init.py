@@ -10,7 +10,11 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from weathercloud import WeathercloudError
 
-from custom_components.weathercloud.const import CONF_SHOW_ON_MAP
+from custom_components.weathercloud.const import (
+    CONF_DEVICE_ID,
+    CONF_SHOW_ON_MAP,
+    DOMAIN,
+)
 
 from .conftest import DEVICE_ID, SAMPLE_VALUES
 
@@ -168,7 +172,6 @@ async def test_show_on_map_disabled_omits_coordinates(
 ) -> None:
     """When show_on_map option is False, coordinates are not exposed."""
     from pytest_homeassistant_custom_component.common import MockConfigEntry
-    from custom_components.weathercloud.const import DOMAIN
 
     entry = MockConfigEntry(
         domain=DOMAIN,
