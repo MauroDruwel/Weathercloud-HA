@@ -1,0 +1,69 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Weathercloud-weerstation toevoegen",
+        "description": "Voer het station-ID in vanaf de Weathercloud-URL.\n\nVoorbeeld: `app.weathercloud.net/d**5726468552**` → Station-ID is `5726468552`\n\n**Inloggegevens:** Vul dit gedeelte alleen in als dit uw eigen station is en u privésensoren (zoals binnentemperatuur) wilt ophalen. Laat anders leeg.",
+        "data": {
+          "device_id": "Station-ID",
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        },
+        "data_description": {
+          "device_id": "Het numerieke ID aan het einde van de URL van het station op app.weathercloud.net",
+          "username": "Optioneel - Alleen vereist als u privésensoren (zoals binnentemperatuur) wilt weergeven.",
+          "password": "Optioneel - Alleen vereist als u privésensoren (zoals binnentemperatuur) wilt weergeven."
+        },
+        "sections": {
+          "login_details": {
+            "name": "Inloggegevens"
+          }
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Kan geen verbinding maken met Weathercloud. Controleer of het station-ID correct is en het station online is.",
+      "invalid_auth": "Ongeldige gebruikersnaam of wachtwoord.",
+      "unknown": "Er is een onverwachte fout opgetreden. Controleer de Home Assistant-logboeken voor details."
+    },
+    "abort": {
+      "already_configured": "Dit station is al geconfigureerd."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Weathercloud-opties",
+        "data": {
+          "scan_interval": "Polling-interval"
+        },
+        "data_description": {
+          "scan_interval": "Hoe vaak nieuwe gegevens moeten worden opgehaald (minuten). Gratis stations updaten elke 10 minuten."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature": { "name": "Temperatuur" },
+      "dew_point": { "name": "Dauwpunt" },
+      "wind_chill": { "name": "Gevoelstemperatuur (wind chill)" },
+      "heat_index": { "name": "Hitte-index" },
+      "humidity": { "name": "Luchtvochtigheid" },
+      "pressure": { "name": "Luchtdruk" },
+      "wind_speed": { "name": "Windsnelheid" },
+      "wind_speed_avg": { "name": "Gemiddelde windsnelheid" },
+      "wind_gust": { "name": "Windstoot" },
+      "wind_direction": { "name": "Windrichting" },
+      "wind_direction_avg": { "name": "Gemiddelde windrichting" },
+      "rain": { "name": "Regen" },
+      "rain_rate": { "name": "Regenintensiteit" },
+      "solar_radiation": { "name": "Zonnestraling" },
+      "uv_index": { "name": "UV-index" },
+      "inside_temperature": { "name": "Binnentemperatuur" },
+      "inside_humidity": { "name": "Binnenluchtvochtigheid" },
+      "inside_heat_index": { "name": "Binnen hitte-index" },
+      "last_update": { "name": "Laatste update" }
+    }
+  }
+}
