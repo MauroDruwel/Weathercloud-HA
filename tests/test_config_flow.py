@@ -35,7 +35,7 @@ async def test_user_flow_success(hass: HomeAssistant, mock_client: MagicMock) ->
         CONF_DEVICE_ID: DEVICE_ID,
         CONF_USERNAME: None,
         CONF_PASSWORD: None,
-        CONF_SHOW_ON_MAP: False,
+        CONF_SHOW_ON_MAP: True,
     }
     # The validation client must be closed regardless of outcome.
     assert mock_client.close.called
@@ -54,7 +54,7 @@ async def test_user_flow_with_credentials_success(
         result["flow_id"],
         {
             CONF_DEVICE_ID: DEVICE_ID,
-            CONF_SHOW_ON_MAP: True,
+            CONF_SHOW_ON_MAP: False,
             "login_details": {
                 CONF_USERNAME: "testuser",
                 CONF_PASSWORD: "testpassword",
@@ -66,7 +66,7 @@ async def test_user_flow_with_credentials_success(
         CONF_DEVICE_ID: DEVICE_ID,
         CONF_USERNAME: "testuser",
         CONF_PASSWORD: "testpassword",
-        CONF_SHOW_ON_MAP: True,
+        CONF_SHOW_ON_MAP: False,
     }
     assert mock_client.close.called
 
