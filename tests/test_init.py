@@ -165,12 +165,20 @@ async def test_station_coordinates_missing_omits_map_attributes(
 async def test_show_on_map_disabled_omits_coordinates(
     hass: HomeAssistant,
     mock_client: MagicMock,
-    mock_config_entry,
 ) -> None:
     """When show_on_map option is False, coordinates are not exposed."""
-    mock_config_entry.options = {CONF_SHOW_ON_MAP: False}
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
+    from custom_components.weathercloud.const import DOMAIN
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=DEVICE_ID,
+        data={CONF_DEVICE_ID: DEVICE_ID},
+        options={CONF_SHOW_ON_MAP: False},
+        unique_id=DEVICE_ID,
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     temp_state = hass.states.get("sensor.ginometeo_temperature")
