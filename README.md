@@ -1,6 +1,6 @@
 # 🌦️ Weathercloud for Home Assistant
 
-[![HACS Custom](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/default)
 [![Validate](https://github.com/MauroDruwel/Weathercloud-HA/actions/workflows/validate.yml/badge.svg)](https://github.com/MauroDruwel/Weathercloud-HA/actions/workflows/validate.yml)
 [![Tests](https://github.com/MauroDruwel/Weathercloud-HA/actions/workflows/tests.yml/badge.svg)](https://github.com/MauroDruwel/Weathercloud-HA/actions/workflows/tests.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -25,11 +25,13 @@ no cloud login**. Just paste a station ID and you're done.
 
 ## 📦 Installation
 
-### Via HACS (custom repository)
+### Via HACS (Recommended)
 
-1. HACS → **⋮** → **Custom repositories**
-2. Add `https://github.com/MauroDruwel/Weathercloud-HA` with category **Integration**
-3. Install **Weathercloud**, then **restart** Home Assistant
+Weathercloud is included in the default HACS store:
+
+1. Open **HACS** in your Home Assistant instance.
+2. Go to **Integrations** and search for **Weathercloud**.
+3. Click **Download**, then **restart** Home Assistant.
 
 [![Open in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=MauroDruwel&repository=Weathercloud-HA&category=integration)
 
