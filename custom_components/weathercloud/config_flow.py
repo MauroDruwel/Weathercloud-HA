@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import inspect
 import logging
 from typing import Any
 
+import httpx
 import voluptuous as vol
 from homeassistant import data_entry_flow
 from homeassistant.config_entries import (
@@ -23,7 +25,9 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from weathercloud import WeathercloudClient, WeathercloudError
+from weathercloud import AsyncWeathercloudClient
+from weathercloud.core.api_error import ApiError
+from weathercloud.core.parse_error import ParsingError
 
 from .const import (
     CONF_DEVICE_ID,
@@ -38,6 +42,14 @@ from .const import (
 from .coordinator import WeathercloudConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class WeathercloudAuthError(Exception):
+    """Exception raised when authentication fails."""
+
+
+class WeathercloudConnectionError(Exception):
+    """Exception raised when connecting or fetching station data fails."""
 
 
 class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -67,11 +79,15 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await self._validate_device_id(device_id, username, password)
-            except WeathercloudError as err:
-                if "Login failed" in str(err):
-                    errors["base"] = "invalid_auth"
-                else:
-                    errors["base"] = "cannot_connect"
+            except WeathercloudAuthError:
+                errors["base"] = "invalid_auth"
+            except (
+                WeathercloudConnectionError,
+                ApiError,
+                ParsingError,
+                httpx.HTTPError,
+            ):
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception(
                     "Unexpected error validating station ID %s", device_id
@@ -154,16 +170,55 @@ class WeathercloudConfigFlow(ConfigFlow, domain=DOMAIN):
         Works for partial stations too — we only require a parseable response
         carrying an ``epoch`` timestamp.
         """
-        client = WeathercloudClient(username=username, password=password)
+        httpx_client = httpx.AsyncClient()
+        client = AsyncWeathercloudClient(
+            requested_with="XMLHttpRequest",
+            httpx_client=httpx_client,
+        )
         try:
-            data = await self.hass.async_add_executor_job(
-                client.get_device_values, device_id
-            )
-        finally:
-            await self.hass.async_add_executor_job(client.close)
+            if username and password:
+                try:
+                    res = client.auth.with_raw_response.login(
+                        login_form_entity=username,
+                        login_form_password=password,
+                    )
+                    raw = await res if inspect.isawaitable(res) else res
+                    response_obj = getattr(raw, "_response", raw)
+                    resp_text = getattr(response_obj, "text", "")
+                    resp_url = getattr(response_obj, "url", None)
+                    url_path = getattr(resp_url, "path", "")
+                    if "invalid" in resp_text.lower() or url_path.endswith("/signin"):
+                        raise WeathercloudAuthError("Invalid username or password")
+                except (ApiError, httpx.HTTPError) as err:
+                    if getattr(err, "status_code", None) in (401, 403):
+                        raise WeathercloudAuthError(
+                            "Invalid username or password"
+                        ) from err
+                    raise WeathercloudConnectionError(
+                        f"Connection error during login: {err}"
+                    ) from err
 
-        if not isinstance(data, dict) or "epoch" not in data:
-            raise WeathercloudError("Unexpected response from station")
+            try:
+                res = client.device_live.get_values(device_id=device_id)
+                values = await res if inspect.isawaitable(res) else res
+            except (ApiError, ParsingError, httpx.HTTPError) as err:
+                raise WeathercloudConnectionError(
+                    f"Error fetching station data: {err}"
+                ) from err
+
+            if isinstance(values, dict):
+                epoch = values.get("epoch")
+            else:
+                epoch = getattr(values, "epoch", None)
+
+            if epoch is None:
+                raise WeathercloudConnectionError("Unexpected response from station")
+        finally:
+            await httpx_client.aclose()
+            if hasattr(client, "close"):
+                close_res = client.close()
+                if inspect.isawaitable(close_res):
+                    await close_res
 
 
 class WeathercloudOptionsFlow(OptionsFlow):

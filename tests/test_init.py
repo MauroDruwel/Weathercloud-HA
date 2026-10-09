@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from weathercloud import WeathercloudError
+from weathercloud.core.api_error import ApiError
 
 from custom_components.weathercloud.const import (
     CONF_DEVICE_ID,
@@ -62,7 +62,9 @@ async def test_setup_fails_on_api_error(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry
 ) -> None:
     """A data-fetch failure results in a retry (ConfigEntryNotReady)."""
-    mock_client.get_device_values.side_effect = WeathercloudError("down")
+    mock_client.device_live.get_values.side_effect = ApiError(
+        status_code=500, body="down"
+    )
     mock_config_entry.add_to_hass(hass)
 
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -74,7 +76,12 @@ async def test_station_info_failure_is_non_fatal(
     hass: HomeAssistant, mock_client: MagicMock, mock_config_entry
 ) -> None:
     """A station-info scrape failure must not block setup."""
-    mock_client.get_station_info.side_effect = WeathercloudError("no name")
+    mock_client.stations.get_station_page.side_effect = ApiError(
+        status_code=500, body="no name"
+    )
+    mock_client.device_live.get_info.side_effect = ApiError(
+        status_code=500, body="no info"
+    )
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -116,7 +123,7 @@ async def test_missing_value_is_handled(
 ) -> None:
     """Empty/garbage raw values do not crash and read as unknown."""
     payload = {"epoch": "1748358122", "temp": "", "hum": "n/a", "bar": "1013.2"}
-    mock_client.get_device_values.return_value = payload
+    mock_client.device_live.get_values.return_value = payload
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -137,7 +144,7 @@ async def test_fractional_uv_index_is_not_truncated(
 ) -> None:
     """A UV index below 1 keeps its decimal instead of being truncated to 0."""
     payload = dict(SAMPLE_VALUES, uvi="0.9")
-    mock_client.get_device_values.return_value = payload
+    mock_client.device_live.get_values.return_value = payload
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

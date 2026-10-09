@@ -8,7 +8,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from weathercloud import WeathercloudError
+from weathercloud.core.api_error import ApiError
 
 from custom_components.weathercloud.const import (
     CONF_DEVICE_ID,
@@ -74,8 +74,10 @@ async def test_user_flow_with_credentials_success(
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """A WeathercloudError surfaces as a cannot_connect error."""
-    mock_client.get_device_values.side_effect = WeathercloudError("boom")
+    """An API error surfaces as a cannot_connect error."""
+    mock_client.device_live.get_values.side_effect = ApiError(
+        status_code=500, body="boom"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -91,10 +93,13 @@ async def test_user_flow_cannot_connect(
 async def test_user_flow_invalid_auth(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """A login-related WeathercloudError surfaces as an invalid_auth error."""
-    mock_client.get_device_values.side_effect = WeathercloudError(
-        "Login failed: invalid password"
+    """A login failure surfaces as an invalid_auth error."""
+    bad_login_resp = MagicMock()
+    bad_login_resp._response.text = (
+        'error help-inline">Invalid username / email or password.'
     )
+    bad_login_resp._response.url.path = "/signin"
+    mock_client.auth.with_raw_response.login.return_value = bad_login_resp
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -118,7 +123,7 @@ async def test_user_flow_bad_response(
     hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """A response without an epoch is rejected."""
-    mock_client.get_device_values.return_value = {"foo": "bar"}
+    mock_client.device_live.get_values.return_value = {"foo": "bar"}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
